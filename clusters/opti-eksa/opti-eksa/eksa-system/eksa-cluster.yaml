@@ -1,0 +1,77 @@
+apiVersion: anywhere.eks.amazonaws.com/v1alpha1
+kind: Cluster
+metadata:
+  annotations:
+    anywhere.eks.amazonaws.com/managed-by-cli: "true"
+    anywhere.eks.amazonaws.com/management-components-version: v0.26.0
+  name: opti-eksa
+  namespace: default
+spec:
+  clusterNetwork:
+    cniConfig:
+      cilium:
+        helmValues:
+          MTU: 65400
+          cni:
+            exclusive: false
+          hubble:
+            enabled: false
+          ipv4NativeRoutingCIDR: 192.168.0.0/16
+          policyEnforcementMode: always
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    services:
+      cidrBlocks:
+      - 10.96.0.0/12
+  controlPlaneConfiguration:
+    count: 1
+    machineHealthCheck:
+      maxUnhealthy: 100%
+  datacenterRef:
+    kind: DockerDatacenterConfig
+    name: opti-eksa
+  eksaVersion: v0.26.0
+  externalEtcdConfiguration:
+    count: 1
+  gitOpsRef:
+    kind: GitOpsConfig
+    name: opti-eksa-gitops
+  kubernetesVersion: "1.36"
+  machineHealthCheck:
+    maxUnhealthy: 100%
+    nodeStartupTimeout: 10m0s
+    unhealthyMachineTimeout: 5m0s
+  managementCluster:
+    name: opti-eksa
+  workerNodeGroupConfigurations:
+  - count: 1
+    machineHealthCheck:
+      maxUnhealthy: 40%
+    name: md-0
+
+---
+apiVersion: anywhere.eks.amazonaws.com/v1alpha1
+kind: DockerDatacenterConfig
+metadata:
+  name: opti-eksa
+  namespace: default
+spec: {}
+
+---
+apiVersion: anywhere.eks.amazonaws.com/v1alpha1
+kind: GitOpsConfig
+metadata:
+  name: opti-eksa-gitops
+  namespace: default
+spec:
+  flux:
+    github:
+      branch: main
+      clusterConfigPath: clusters/opti-eksa
+      fluxSystemNamespace: flux-system
+      owner: nanox
+      personal: true
+      repository: eks-anywhere-gitops
+
+---
